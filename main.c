@@ -1,8 +1,16 @@
+/*  MIT License
+ *  Copyright (c) 2025 Skyrix
+ *  
+ *  To compile this program on windows with msys2, please use the following command:  
+ *  gcc main.c -o waveplt -lmingw32 -lSDL2main -lSDL2 -lm
+ *  
+ */
+
 #include <SDL2/SDL.h>
 #include <math.h>
 #include <stdio.h>
 
-#define A 200.0
+#define A 100.0
 #define N_TERMS_SCALE 1
 #define OMEGA0 2.0
 #define POINTS 500*SCALE_X
@@ -31,7 +39,7 @@ void draw_period_lines(SDL_Renderer *renderer) {
     int center_x = screen_width / 2;
 
     // Draw vertical lines
-    for (int i = -10; i <= 10; i++) {  // Draw multiple periods
+    for (int i = -SCALE_X; i <= SCALE_X; i++) {  // Draw multiple periods
         int x_pos = center_x + (int)(i * T_pixels);
         if (x_pos >= 0 && x_pos < screen_width) {
             SDL_RenderDrawLine(renderer, x_pos, 0, x_pos, screen_height);
@@ -45,17 +53,17 @@ void draw_wave(SDL_Renderer *renderer) {
         double x = (double)i / (POINTS - 1) * (2 * M_PI / OMEGA0) * SCALE_X;
         double sum = 0.0;
 
-        for (int n = 0; n <= N_TERMS; n++) {
-            sum += sin(OMEGA0 * x);
+        for (int n = 1; n <= N_TERMS; n++) {
+            //sum += sin(OMEGA0 * x);
             //sum += cos(n * OMEGA0 * x) / (4.0 * n * n - 1.0);                     // Wave-like wave (sea) (careful n=1)
             //sum += sin((2.0*n + 1) * OMEGA0 * x) / (2.0 * n + 1.0);               // Square wave (careful n=0)
-            //sum += (sin(n * (0.25) * M_PI)/(n * 0.25 * M_PI))*cos(n * OMEGA0 * x);  // Scalable square wave (pwm) (careful n=1)
+            sum += (sin(n * (0.25) * M_PI)/(n * 0.25 * M_PI))*cos(n * OMEGA0 * x);  // Scalable square wave (pwm) (careful n=1)
         }
         
-        double y = A * sum;                                     // Simple sine wave
+        //double y = A * sum;                                     // Simple sine wave
         //double y = (2 * A / M_PI) - (4 * A / M_PI) * sum;     // Wave-like wave (sea)
         //double y = (4 * A / M_PI) * sum;                      // Square wave
-        //double y = (0.25*2.0*A) + (2.0*0.25*2.0*A) * sum;     // Scalable square wave (pwm)
+        double y = (0.25*2.0*A) + (2.0*0.25*2.0*A) * sum;     // Scalable square wave (pwm)
         y = screen_height / 2 - y;
         
         SDL_RenderDrawPoint(renderer, (int)(x * screen_width / (2 * M_PI / OMEGA0))/SCALE_X, (int)y);
@@ -100,8 +108,6 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
-    SDL_MaximizeWindow(window);
-    SDL_GetWindowSize(window, &screen_width, &screen_height);
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
@@ -110,6 +116,11 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+
+    SDL_MaximizeWindow(window);
+    SDL_GetWindowSize(window, &screen_width, &screen_height);
+    SDL_RenderSetLogicalSize(renderer, screen_width, screen_height);
+
 
     int running = 1;
     SDL_Event event;
